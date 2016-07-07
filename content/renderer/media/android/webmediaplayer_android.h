@@ -195,6 +195,7 @@ class WebMediaPlayerAndroid : public blink::WebMediaPlayer,
   void OnSeekComplete(const base::TimeDelta& current_time);
   void OnMediaError(int error_type);
   void OnVideoSizeChanged(int width, int height);
+  void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd);
   void OnDurationChanged(const base::TimeDelta& duration);
 
   // Called to update the current time.
@@ -527,6 +528,13 @@ class WebMediaPlayerAndroid : public blink::WebMediaPlayer,
   media::TimeDeltaInterpolator interpolator_;
 
   scoped_ptr<MediaSourceDelegate> media_source_delegate_;
+
+  // SeekableRange Start.
+  int seekableRangeStart_;
+
+  // SeekableRange End.
+  int seekableRangeEnd_;
+
 
   // NOTE: Weak pointers must be invalidated before all other member variables.
   base::WeakPtrFactory<WebMediaPlayerAndroid> weak_factory_;

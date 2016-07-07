@@ -196,6 +196,8 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
       allow_stored_credentials_(false),
       is_local_resource_(false),
       interpolator_(&default_tick_clock_),
+      seekableRangeStart_(-1),
+      seekableRangeEnd_(-1),
       weak_factory_(this) {
   DCHECK(player_manager_);
   DCHECK(cdm_factory_);
@@ -597,6 +599,12 @@ blink::WebTimeRanges WebMediaPlayerAndroid::seekable() const {
   // TODO(dalecurtis): Technically this allows seeking on media which return an
   // infinite duration.  While not expected, disabling this breaks semi-live
   // players, http://crbug.com/427412.
+
+  // For sliding window with valid seekable ranges, They should not be hardcoded.
+  if (seekableRangeStart_ >= 0 && seekableRangeEnd_ >= 0) {
+    const blink::WebTimeRange seekable_range(seekableRangeStart_, seekableRangeEnd_);
+    return blink::WebTimeRanges(&seekable_range, 1);
+  }
   const blink::WebTimeRange seekable_range(0.0, duration());
   return blink::WebTimeRanges(&seekable_range, 1);
 }
@@ -867,6 +875,13 @@ void WebMediaPlayerAndroid::OnMediaError(int error_type) {
   client_->repaint();
 }
 
+void WebMediaPlayerAndroid::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd)
+{
+    LOG(INFO) << __FUNCTION__ << "(" << seekableRangeStart <<" : " <<seekableRangeEnd<< ")";
+    seekableRangeStart_ = seekableRangeStart;
+    seekableRangeEnd_ = seekableRangeEnd;
+}
+
 void WebMediaPlayerAndroid::OnVideoSizeChanged(int width, int height) {
   DCHECK(main_thread_checker_.CalledOnValidThread());
 
@@ -927,6 +942,10 @@ void WebMediaPlayerAndroid::OnVideoSizeChanged(int width, int height) {
 void WebMediaPlayerAndroid::OnTimeUpdate(base::TimeDelta current_timestamp,
                                          base::TimeTicks current_time_ticks) {
   DCHECK(main_thread_checker_.CalledOnValidThread());
+
+  if (seeking())
+    return;
+
   // Compensate the current_timestamp with the IPC latency.
   base::TimeDelta lower_bound =
       base::TimeTicks::Now() - current_time_ticks + current_timestamp;
@@ -940,7 +959,9 @@ void WebMediaPlayerAndroid::OnTimeUpdate(base::TimeDelta current_timestamp,
   // if the lower_bound is smaller than the current time, just use the current
   // time so that the timer is always progressing.
   lower_bound =
-      std::min(lower_bound, base::TimeDelta::FromSecondsD(currentTime()));
+      std::max(lower_bound, base::TimeDelta::FromSecondsD(currentTime()));
+  if (lower_bound > upper_bound)
+    upper_bound = lower_bound;
   interpolator_.SetBounds(lower_bound, upper_bound);
 }
 

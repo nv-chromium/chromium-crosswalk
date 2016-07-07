@@ -126,6 +126,7 @@ class RendererMediaPlayerManager : public RenderFrameObserver {
                        const base::TimeDelta& current_timestamp);
   void OnMediaError(int player_id, int error);
   void OnVideoSizeChanged(int player_id, int width, int height);
+  void OnSeekableRangeChanged(int player_id, int seekableRangeStart, int seekableRangeEnd);
   void OnTimeUpdate(int player_id,
                     base::TimeDelta current_timestamp,
                     base::TimeTicks current_time_ticks);
