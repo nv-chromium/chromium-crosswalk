@@ -289,6 +289,10 @@ public class MediaPlayerBridge {
         getLocalPlayer().setOnErrorListener(listener);
     }
 
+    protected void setOnInfoListener(MediaPlayer.OnInfoListener listener) {
+        getLocalPlayer().setOnInfoListener(listener);
+    }
+
     protected void setOnPreparedListener(MediaPlayer.OnPreparedListener listener) {
         getLocalPlayer().setOnPreparedListener(listener);
     }

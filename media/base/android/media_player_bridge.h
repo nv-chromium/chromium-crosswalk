@@ -88,6 +88,7 @@ class MEDIA_EXPORT MediaPlayerBridge : public MediaPlayerAndroid {
 
   // MediaPlayerAndroid implementation.
   void OnVideoSizeChanged(int width, int height) override;
+  void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) override;
   void OnPlaybackComplete() override;
   void OnMediaInterrupted() override;
   void OnMediaPrepared() override;

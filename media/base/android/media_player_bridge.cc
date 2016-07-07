@@ -396,6 +396,10 @@ void MediaPlayerBridge::OnVideoSizeChanged(int width, int height) {
   MediaPlayerAndroid::OnVideoSizeChanged(width, height);
 }
 
+void MediaPlayerBridge::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) {
+  MediaPlayerAndroid::OnSeekableRangeChanged(seekableRangeStart, seekableRangeEnd);
+}
+
 void MediaPlayerBridge::OnPlaybackComplete() {
   SetAudible(false);
   time_update_timer_.Stop();

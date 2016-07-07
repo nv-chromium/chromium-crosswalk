@@ -63,6 +63,9 @@ class MEDIA_EXPORT MediaPlayerManager {
   // Called when video size has changed. Args: player ID, width, height.
   virtual void OnVideoSizeChanged(int player_id, int width, int height) = 0;
 
+  // Called when seekable range start or end value changed . Args: player ID, seekableRangeStart, seekableRangeEnd.
+  virtual void OnSeekableRangeChanged(int player_id, int seekableRangeStart, int seekableRangeEnd) = 0;
+
   // Called when the player thinks it stopped or started making sound.
   virtual void OnAudibleStateChanged(int player_id, bool is_audible_now) = 0;
 

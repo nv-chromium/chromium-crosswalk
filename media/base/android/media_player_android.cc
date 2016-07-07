@@ -53,6 +53,10 @@ void MediaPlayerAndroid::OnVideoSizeChanged(int width, int height) {
   manager_->OnVideoSizeChanged(player_id(), width, height);
 }
 
+void MediaPlayerAndroid::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) {
+  manager_->OnSeekableRangeChanged(player_id(), seekableRangeStart, seekableRangeEnd);
+}
+
 void MediaPlayerAndroid::OnMediaError(int error_type) {
   manager_->OnError(player_id(), error_type);
 }

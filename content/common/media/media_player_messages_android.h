@@ -157,6 +157,12 @@ IPC_MESSAGE_ROUTED3(MediaPlayerMsg_MediaVideoSizeChanged,
                     int /* width */,
                     int /* height */)
 
+// Seekable Range has changed.
+IPC_MESSAGE_ROUTED3(MediaPlayerMsg_MediaSeekableRangeChanged,
+                    int /* player_id */,
+                    int /* seekableRangeStart */,
+                    int /* seekableRangeEnd */)
+
 // The current play time has updated.
 IPC_MESSAGE_ROUTED3(MediaPlayerMsg_MediaTimeUpdate,
                     int /* player_id */,

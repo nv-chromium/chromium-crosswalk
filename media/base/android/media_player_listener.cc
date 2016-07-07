@@ -57,6 +57,13 @@ void MediaPlayerListener::OnVideoSizeChanged(
       width, height));
 }
 
+void MediaPlayerListener::OnSeekableRangeChanged(
+    JNIEnv* /* env */, jobject /* obj */, jint seekableRangeStart, jint seekableRangeEnd) {
+  task_runner_->PostTask(FROM_HERE, base::Bind(
+      &MediaPlayerAndroid::OnSeekableRangeChanged, media_player_,
+      seekableRangeStart, seekableRangeEnd));
+}
+
 void MediaPlayerListener::OnBufferingUpdate(
     JNIEnv* /* env */, jobject /* obj */, jint percent) {
   task_runner_->PostTask(FROM_HERE, base::Bind(

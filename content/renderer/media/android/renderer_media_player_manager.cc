@@ -40,6 +40,8 @@ bool RendererMediaPlayerManager::OnMessageReceived(const IPC::Message& msg) {
     IPC_MESSAGE_HANDLER(MediaPlayerMsg_MediaError, OnMediaError)
     IPC_MESSAGE_HANDLER(MediaPlayerMsg_MediaVideoSizeChanged,
                         OnVideoSizeChanged)
+    IPC_MESSAGE_HANDLER(MediaPlayerMsg_MediaSeekableRangeChanged,
+                        OnSeekableRangeChanged)
     IPC_MESSAGE_HANDLER(MediaPlayerMsg_MediaTimeUpdate, OnTimeUpdate)
     IPC_MESSAGE_HANDLER(MediaPlayerMsg_WaitingForDecryptionKey,
                         OnWaitingForDecryptionKey)
@@ -177,6 +179,14 @@ void RendererMediaPlayerManager::OnVideoSizeChanged(int player_id,
   WebMediaPlayerAndroid* player = GetMediaPlayer(player_id);
   if (player)
     player->OnVideoSizeChanged(width, height);
+}
+
+void RendererMediaPlayerManager::OnSeekableRangeChanged(int player_id,
+                                                    int seekableRangeStart,
+                                                    int seekableRangeEnd) {
+  WebMediaPlayerAndroid* player = GetMediaPlayer(player_id);
+  if (player)
+    player->OnSeekableRangeChanged(seekableRangeStart, seekableRangeEnd);
 }
 
 void RendererMediaPlayerManager::OnTimeUpdate(
