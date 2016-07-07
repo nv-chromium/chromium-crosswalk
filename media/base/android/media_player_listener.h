@@ -36,6 +36,8 @@ class MediaPlayerListener {
   void OnMediaError(JNIEnv* /* env */, jobject /* obj */, jint error_type);
   void OnVideoSizeChanged(JNIEnv* /* env */, jobject /* obj */,
                           jint width, jint height);
+  void OnSeekableRangeChanged(JNIEnv* /* env */, jobject /* obj */,
+                          jint seekableRangeStart, jint seekableRangeEnd);
   void OnBufferingUpdate(JNIEnv* /* env */, jobject /* obj */, jint percent);
   void OnPlaybackComplete(JNIEnv* /* env */, jobject /* obj */);
   void OnSeekComplete(JNIEnv* /* env */, jobject /* obj */);

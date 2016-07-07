@@ -343,6 +343,12 @@ void BrowserMediaPlayerManager::OnAudibleStateChanged(
       render_frame_host_, player_id, is_audible);
 }
 
+void BrowserMediaPlayerManager::OnSeekableRangeChanged(
+    int player_id, int seekableRangeStart, int seekableRangeEnd) {
+  Send(new MediaPlayerMsg_MediaSeekableRangeChanged(RoutingID(), player_id,
+      seekableRangeStart, seekableRangeEnd));
+}
+
 void BrowserMediaPlayerManager::OnWaitingForDecryptionKey(int player_id) {
   Send(new MediaPlayerMsg_WaitingForDecryptionKey(RoutingID(), player_id));
 }

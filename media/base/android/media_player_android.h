@@ -109,6 +109,7 @@ class MEDIA_EXPORT MediaPlayerAndroid {
   // the events needed by MediaPlayerBridge. http://crbug.com/422597.
   // MediaPlayerListener callbacks.
   virtual void OnVideoSizeChanged(int width, int height);
+  virtual void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd);
   virtual void OnMediaError(int error_type);
   virtual void OnBufferingUpdate(int percent);
   virtual void OnPlaybackComplete();
