@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -61,6 +62,9 @@ class MEDIA_EXPORT MediaPlayerManager {
 
   // Called when video size has changed. Args: player ID, width, height.
   virtual void OnVideoSizeChanged(int player_id, int width, int height) = 0;
+
+  // Called when seekable range start or end value changed . Args: player ID, seekableRangeStart, seekableRangeEnd.
+  virtual void OnSeekableRangeChanged(int player_id, int seekableRangeStart, int seekableRangeEnd) = 0;
 
   // Called when the player pauses as a new key is required to decrypt
   // encrypted content.

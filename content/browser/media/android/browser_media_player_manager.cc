@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -348,6 +349,12 @@ void BrowserMediaPlayerManager::OnVideoSizeChanged(
       width, height));
   if (fullscreen_player_id_ == player_id)
     video_view_->OnVideoSizeChanged(width, height);
+}
+
+void BrowserMediaPlayerManager::OnSeekableRangeChanged(
+    int player_id, int seekableRangeStart, int seekableRangeEnd) {
+  Send(new MediaPlayerMsg_MediaSeekableRangeChanged(RoutingID(), player_id,
+      seekableRangeStart, seekableRangeEnd));
 }
 
 void BrowserMediaPlayerManager::OnWaitingForDecryptionKey(int player_id) {

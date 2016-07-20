@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -216,6 +217,8 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
       allow_stored_credentials_(false),
       is_local_resource_(false),
       interpolator_(&default_tick_clock_),
+      seekableRangeStart_(-1),
+      seekableRangeEnd_(-1),
       frame_id_(frame_id),
       enable_texture_copy_(enable_texture_copy),
       suppress_deleting_texture_(false),
@@ -636,6 +639,12 @@ blink::WebTimeRanges WebMediaPlayerAndroid::seekable() const {
   // TODO(dalecurtis): Technically this allows seeking on media which return an
   // infinite duration.  While not expected, disabling this breaks semi-live
   // players, http://crbug.com/427412.
+
+  // For sliding window with valid seekable ranges, They should not be hardcoded.
+  if (seekableRangeStart_ >= 0 && seekableRangeEnd_ >= 0) {
+    const blink::WebTimeRange seekable_range(seekableRangeStart_, seekableRangeEnd_);
+    return blink::WebTimeRanges(&seekable_range, 1);
+  }
   const blink::WebTimeRange seekable_range(0.0, duration());
   return blink::WebTimeRanges(&seekable_range, 1);
 }
@@ -915,6 +924,13 @@ void WebMediaPlayerAndroid::OnMediaError(int error_type) {
       break;
   }
   client_->repaint();
+}
+
+void WebMediaPlayerAndroid::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd)
+{
+    LOG(INFO) << __FUNCTION__ << "(" << seekableRangeStart <<" : " <<seekableRangeEnd<< ")";
+    seekableRangeStart_ = seekableRangeStart;
+    seekableRangeEnd_ = seekableRangeEnd;
 }
 
 void WebMediaPlayerAndroid::OnVideoSizeChanged(int width, int height) {

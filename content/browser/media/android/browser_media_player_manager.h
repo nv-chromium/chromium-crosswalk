@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -94,6 +95,7 @@ class CONTENT_EXPORT BrowserMediaPlayerManager
                       const base::TimeDelta& current_time) override;
   void OnError(int player_id, int error) override;
   void OnVideoSizeChanged(int player_id, int width, int height) override;
+  void OnSeekableRangeChanged(int player_id, int seekableRangeStart, int seekableRangeEnd) override;
   void OnWaitingForDecryptionKey(int player_id) override;
 
   media::MediaResourceGetter* GetMediaResourceGetter() override;

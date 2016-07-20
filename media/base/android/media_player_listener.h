@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -37,6 +38,8 @@ class MediaPlayerListener {
  void OnMediaError(JNIEnv* /* env */,
                    const base::android::JavaParamRef<jobject>& /* obj */,
                    jint error_type);
+ void OnSeekableRangeChanged(JNIEnv* /* env */, jobject /* obj */,
+                         jint seekableRangeStart, jint seekableRangeEnd);
  void OnVideoSizeChanged(JNIEnv* /* env */,
                          const base::android::JavaParamRef<jobject>& /* obj */,
                          jint width,

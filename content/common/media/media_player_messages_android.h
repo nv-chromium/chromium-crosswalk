@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -145,6 +146,12 @@ IPC_MESSAGE_ROUTED2(MediaPlayerMsg_SeekRequest,
 IPC_MESSAGE_ROUTED2(MediaPlayerMsg_SeekCompleted,
                     int /* player_id */,
                     base::TimeDelta /* current_time */)
+
+// Seekable Range has changed.
+IPC_MESSAGE_ROUTED3(MediaPlayerMsg_MediaSeekableRangeChanged,
+                    int /* player_id */,
+                    int /* seekableRangeStart */,
+                    int /* seekableRangeEnd */)
 
 // Video size has changed.
 IPC_MESSAGE_ROUTED3(MediaPlayerMsg_MediaVideoSizeChanged,

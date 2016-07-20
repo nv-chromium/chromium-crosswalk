@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -324,6 +325,10 @@ public class MediaPlayerBridge {
 
     protected void setOnErrorListener(MediaPlayer.OnErrorListener listener) {
         getLocalPlayer().setOnErrorListener(listener);
+    }
+
+    protected void setOnInfoListener(MediaPlayer.OnInfoListener listener) {
+        getLocalPlayer().setOnInfoListener(listener);
     }
 
     protected void setOnPreparedListener(MediaPlayer.OnPreparedListener listener) {

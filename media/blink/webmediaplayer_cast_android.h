@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2016 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -61,6 +62,7 @@ class WebMediaPlayerCast : public RendererMediaPlayerInterface {
   void OnSeekComplete(const base::TimeDelta& current_time) override;
   void OnMediaError(int error_type) override;
   void OnVideoSizeChanged(int width, int height) override;
+  void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) override;
 
   // Called to update the current time.
   void OnTimeUpdate(base::TimeDelta current_timestamp,

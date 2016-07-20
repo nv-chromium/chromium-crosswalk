@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -9,6 +10,10 @@ import android.media.MediaPlayer;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.Log;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 // This class implements all the listener interface for android mediaplayer.
 // Callbacks will be sent to the native class for processing.
@@ -18,6 +23,7 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnVideoSizeChangedListener,
+        MediaPlayer.OnInfoListener,
         MediaPlayer.OnErrorListener {
     // These values are mirrored as enums in media/base/android/media_player_android.h.
     // Please ensure they stay in sync.
@@ -30,6 +36,10 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
     // These values are copied from android media player.
     public static final int MEDIA_ERROR_MALFORMED = -1007;
     public static final int MEDIA_ERROR_TIMED_OUT = -110;
+
+    // These are the meta data keys for seekable ranges defined in native player with same keys
+    public static final int SEEKABLE_RANGE_START = 8193;
+    public static final int SEEKABLE_RANGE_END   = 8194;
 
     // Used to determine the class instance to dispatch the native call to.
     private long mNativeMediaPlayerListener = 0;
@@ -76,6 +86,39 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
     }
 
     @Override
+    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+        if (what == MediaPlayer.MEDIA_INFO_METADATA_UPDATE) {
+            try {
+                Method getMetadata = mp.getClass().getDeclaredMethod(
+                        "getMetadata", boolean.class, boolean.class);
+                getMetadata.setAccessible(true);
+                Object data = getMetadata.invoke(mp, false, false);
+                if (data != null) {
+                    Class<?> metadataClass = data.getClass();
+                    Method hasMethod = metadataClass.getDeclaredMethod("has", int.class);
+                    Boolean seekStartAvail = (Boolean)hasMethod.invoke(data, SEEKABLE_RANGE_START);
+                    Boolean seekEndAvail = (Boolean)hasMethod.invoke(data, SEEKABLE_RANGE_END);
+
+                    if (seekStartAvail == true && seekEndAvail == true) {
+                        Method getIntMethod = metadataClass.getDeclaredMethod("getInt", int.class);
+                        getIntMethod.setAccessible(true);
+                        int seekableRangeStart = (Integer) getIntMethod.invoke(data, SEEKABLE_RANGE_START);
+                        int seekableRangeEnd = (Integer) getIntMethod.invoke(data, SEEKABLE_RANGE_END);
+                        nativeOnSeekableRangeChanged(mNativeMediaPlayerListener, seekableRangeStart, seekableRangeEnd);
+                    }
+                }
+            } catch (NoSuchMethodException e) {
+                Log.e("OnInfo", "Cannot find MediaPlayer.getMetadata() method: " + e);
+            } catch (InvocationTargetException e) {
+                Log.e("OnInfo", "Cannot invoke MediaPlayer.getMetadata() method: " + e);
+            } catch (IllegalAccessException e) {
+                Log.e("OnInfo", "Cannot access metadata: " + e);
+            }
+        }
+        return true;
+    }
+
+    @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
         nativeOnVideoSizeChanged(mNativeMediaPlayerListener, width, height);
     }
@@ -111,6 +154,7 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
             mediaPlayerBridge.setOnErrorListener(listener);
             mediaPlayerBridge.setOnPreparedListener(listener);
             mediaPlayerBridge.setOnSeekCompleteListener(listener);
+            mediaPlayerBridge.setOnInfoListener(listener);
             mediaPlayerBridge.setOnVideoSizeChangedListener(listener);
         }
         return listener;
@@ -122,6 +166,10 @@ class MediaPlayerListener implements MediaPlayer.OnPreparedListener,
     private native void nativeOnMediaError(
             long nativeMediaPlayerListener,
             int errorType);
+
+    private native void nativeOnSeekableRangeChanged(
+            long nativeMediaPlayerListener,
+            int seekableRangeStart, int seekableRangeEnd);
 
     private native void nativeOnVideoSizeChanged(
             long nativeMediaPlayerListener,
