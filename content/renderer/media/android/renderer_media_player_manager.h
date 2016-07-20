@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -128,6 +129,7 @@ class RendererMediaPlayerManager :
   void OnSeekCompleted(int player_id,
                        const base::TimeDelta& current_timestamp);
   void OnMediaError(int player_id, int error);
+  void OnSeekableRangeChanged(int player_id, int seekableRangeStart, int seekableRangeEnd);
   void OnVideoSizeChanged(int player_id, int width, int height);
   void OnTimeUpdate(int player_id,
                     base::TimeDelta current_timestamp,

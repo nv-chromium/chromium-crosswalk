@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2016 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -229,6 +230,10 @@ void WebMediaPlayerCast::OnMediaError(int error_type) {
 }
 
 void WebMediaPlayerCast::OnVideoSizeChanged(int width, int height) {
+  DVLOG(1) << __FUNCTION__;
+}
+
+void WebMediaPlayerCast::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) {
   DVLOG(1) << __FUNCTION__;
 }
 

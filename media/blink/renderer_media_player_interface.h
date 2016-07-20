@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2016 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -38,6 +39,7 @@ class RendererMediaPlayerInterface {
   virtual void OnSeekRequest(const base::TimeDelta& time_to_seek) = 0;
   virtual void OnSeekComplete(const base::TimeDelta& current_time) = 0;
   virtual void OnMediaError(int error_type) = 0;
+  virtual void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) = 0;
   virtual void OnVideoSizeChanged(int width, int height) = 0;
 
   // Called to update the current time.

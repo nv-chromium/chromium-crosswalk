@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -200,6 +201,7 @@ class WebMediaPlayerAndroid
   void OnMediaError(int error_type) override;
   void OnVideoSizeChanged(int width, int height) override;
   void OnDurationChanged(const base::TimeDelta& duration);
+  void OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) override;
 
   // Called to update the current time.
   void OnTimeUpdate(base::TimeDelta current_timestamp,
@@ -495,6 +497,12 @@ class WebMediaPlayerAndroid
   // Tracks the most recent media time update and provides interpolated values
   // as playback progresses.
   media::TimeDeltaInterpolator interpolator_;
+
+  // SeekableRange Start.
+  int seekableRangeStart_;
+
+  // SeekableRange End.
+  int seekableRangeEnd_;
 
   std::unique_ptr<MediaSourceDelegate> media_source_delegate_;
 

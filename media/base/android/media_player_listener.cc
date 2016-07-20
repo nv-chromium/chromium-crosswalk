@@ -1,3 +1,4 @@
+// Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -49,6 +50,13 @@ void MediaPlayerListener::OnMediaError(JNIEnv* /* env */,
                                        jint error_type) {
   task_runner_->PostTask(FROM_HERE, base::Bind(
       &MediaPlayerAndroid::OnMediaError, media_player_, error_type));
+}
+
+void MediaPlayerListener::OnSeekableRangeChanged(
+    JNIEnv* /* env */, jobject /* obj */, jint seekableRangeStart, jint seekableRangeEnd) {
+  task_runner_->PostTask(FROM_HERE, base::Bind(
+      &MediaPlayerAndroid::OnSeekableRangeChanged, media_player_,
+      seekableRangeStart, seekableRangeEnd));
 }
 
 void MediaPlayerListener::OnVideoSizeChanged(
