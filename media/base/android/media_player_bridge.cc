@@ -38,6 +38,8 @@ MediaPlayerBridge::MediaPlayerBridge(
                          frame_url),
       prepared_(false),
       pending_play_(false),
+      seekable_sliding_window_(false),
+      being_destroyed_(false),
       should_seek_on_prepare_(false),
       url_(url),
       first_party_for_cookies_(first_party_for_cookies),
@@ -54,6 +56,7 @@ MediaPlayerBridge::MediaPlayerBridge(
 }
 
 MediaPlayerBridge::~MediaPlayerBridge() {
+  being_destroyed_ = true;
   if (!j_media_player_bridge_.is_null()) {
     JNIEnv* env = base::android::AttachCurrentThread();
     CHECK(env);
@@ -357,6 +360,14 @@ void MediaPlayerBridge::Release() {
 
   SetAudible(false);
 
+  // Do not release player when needed to resume live stream
+  // after action that caused this call because in such suspended
+  // state we need to keep the player alive and keep updating the
+  // metadata media info in background.
+  if (!being_destroyed_ && seekable_sliding_window_) {
+    return;
+  }
+
   time_update_timer_.Stop();
   if (prepared_) {
     pending_seek_ = GetCurrentTime();
@@ -398,6 +409,8 @@ void MediaPlayerBridge::OnVideoSizeChanged(int width, int height) {
 }
 
 void MediaPlayerBridge::OnSeekableRangeChanged(int seekableRangeStart, int seekableRangeEnd) {
+  if (!seekable_sliding_window_)
+    seekable_sliding_window_ = true;
   MediaPlayerAndroid::OnSeekableRangeChanged(seekableRangeStart, seekableRangeEnd);
 }
 
