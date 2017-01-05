@@ -145,6 +145,11 @@ class MEDIA_EXPORT MediaPlayerBridge : public MediaPlayerAndroid {
   // Pending play event while player is preparing.
   bool pending_play_;
 
+  // is set when playing a live stream and seekable ranges are received in a sliding window fashion.
+  bool seekable_sliding_window_;
+
+  bool being_destroyed_;
+
   // Pending seek time while player is preparing.
   base::TimeDelta pending_seek_;
 
