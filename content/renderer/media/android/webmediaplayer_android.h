@@ -536,6 +536,8 @@ class WebMediaPlayerAndroid : public blink::WebMediaPlayer,
   // SeekableRange End.
   int seekableRangeEnd_;
 
+  // onTimeUpdate occurred before.
+  bool onTimeUpdateOccurred_ : 1;
 
   // NOTE: Weak pointers must be invalidated before all other member variables.
   base::WeakPtrFactory<WebMediaPlayerAndroid> weak_factory_;

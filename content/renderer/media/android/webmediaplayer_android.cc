@@ -200,6 +200,7 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
       interpolator_(&default_tick_clock_),
       seekableRangeStart_(-1),
       seekableRangeEnd_(-1),
+      onTimeUpdateOccurred_(false),
       weak_factory_(this) {
   DCHECK(player_manager_);
   DCHECK(cdm_factory_);
@@ -957,6 +958,22 @@ void WebMediaPlayerAndroid::OnTimeUpdate(base::TimeDelta current_timestamp,
   if (is_playing_) {
     upper_bound += base::TimeDelta::FromMilliseconds(
         media::kTimeUpdateInterval);
+  }
+  // When a live stream is started at the current live time
+  // HTMLMediaElement::setCurrentTime is not called from V8
+  // bindings (V8HTMLMediaElement) before starting to stream
+  // because at that moment HTML content doesn't know the
+  // current live time of the live stream. This prevents us
+  // from setting seekCursor on the media element and the
+  // current time in webmediaplayer at the beginning in a
+  // correct manner. In this case the current live time is
+  // propagated from V8 in the first occurrence of this function.
+  // To set the incorrect positions correctly in such situations,
+  // requestSeek on MediaPlayerClient to current_timestamp received
+  // here on the first occurrence.
+  if (!onTimeUpdateOccurred_) {
+     onTimeUpdateOccurred_ = true;
+     client_->requestSeek(upper_bound.InSecondsF());
   }
   // if the lower_bound is smaller than the current time, just use the current
   // time so that the timer is always progressing.
