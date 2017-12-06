@@ -279,16 +279,20 @@ class MediaResourceGetter {
     @VisibleForTesting
     List<String> getHlsMetadataRequest(final Context context, String url) {
         if (isValidHlsUrl(url)) {
-            UrlRequestContextConfig myConfig = new UrlRequestContextConfig();
-            UrlRequestContext myRequestContext = UrlRequestContext.createContext(context, myConfig);
-            Executor executor = Executors.newSingleThreadExecutor();
-            HlsUrlRequestListener hlsUrlListener = new HlsUrlRequestListener();
-            UrlRequest urlRequest = myRequestContext.createRequest(
-                    url, hlsUrlListener, executor);
-            urlRequest.setHttpMethod("GET");
-            urlRequest.start();
-            while(!urlRequest.isDone());
-            return hlsUrlListener.getResponse();
+            try {
+                UrlRequestContextConfig myConfig = new UrlRequestContextConfig();
+                UrlRequestContext myRequestContext = UrlRequestContext.createContext(context, myConfig);
+                Executor executor = Executors.newSingleThreadExecutor();
+                HlsUrlRequestListener hlsUrlListener = new HlsUrlRequestListener();
+                UrlRequest urlRequest = myRequestContext.createRequest(
+                        url, hlsUrlListener, executor);
+                urlRequest.setHttpMethod("GET");
+                urlRequest.start();
+                while(!urlRequest.isDone());
+                return hlsUrlListener.getResponse();
+            } catch (Exception e) {
+                Log.e(TAG, "Exception in getHlsMetadataRequest: " + e.getMessage());
+            }
         }
         return null;
     }
