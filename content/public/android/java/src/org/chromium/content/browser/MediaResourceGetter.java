@@ -19,20 +19,121 @@ import org.chromium.base.PathUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.net.ExtendedResponseInfo;
+import org.chromium.net.UrlRequest;
+import org.chromium.net.UrlRequestContext;
+import org.chromium.net.UrlRequestContextConfig;
+import org.chromium.net.UrlRequestException;
+import org.chromium.net.UrlRequestListener;
+import org.chromium.net.ResponseInfo;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+class HlsUrlRequestListener implements UrlRequestListener {
+    private ByteArrayOutputStream bytesReceived = new ByteArrayOutputStream();
+    private WritableByteChannel receiveChannel = Channels.newChannel(bytesReceived);
+    private int mStatus = -1;
+    private int mRes = -1;
+    private static final int DONE = 1;
+    private static final int SUCCESS = 0, FAILED = 1;
+    private static final String TAG = "cr_MediaResGetter_UrlRequestListener";
+
+    @Override
+    public void onReceivedRedirect(UrlRequest urlRequest,
+            ResponseInfo responseInfo, String newLocationUrl) {
+        urlRequest.followRedirect();
+    }
+
+    @Override
+    public void onResponseStarted(UrlRequest urlRequest,
+            ResponseInfo responseInfo) {
+        // Now we have response headers!
+        int httpStatusCode = responseInfo.getHttpStatusCode();
+        if (httpStatusCode == 200) {
+            // Success! Let's tell Cronet to read the response body.
+            urlRequest.read(ByteBuffer.allocateDirect(8 * 1024));
+        } else {
+            Log.w(TAG, "status code:" + httpStatusCode + " received for hls Url:" + responseInfo.getUrl());
+        }
+    }
+
+    @Override
+    public void onReadCompleted(UrlRequest urlRequest,
+            ResponseInfo responseInfo, ByteBuffer byteBuffer) {
+        try {
+            receiveChannel.write(byteBuffer);
+        } catch (IOException e) {
+            Log.e(TAG, "IOException during ByteBuffer read. Details: ", e);
+        }
+        byteBuffer.clear();
+        urlRequest.read(byteBuffer);
+    }
+
+    @Override
+    public void onSucceeded(UrlRequest urlRequest,
+            ExtendedResponseInfo extendedResponseInfo) {
+         // Request has completed successfully!
+        mStatus = DONE;
+        mRes = SUCCESS;
+    }
+
+    @Override
+    public void onFailed(UrlRequest urlRequest,
+            ResponseInfo responseInfo, UrlRequestException error) {
+         // Request has failed. responseInfo might be null.
+         Log.e(TAG, "Request failed for url=" + responseInfo.getUrl() + ". " + error.getMessage());
+         // Maybe handle error here. Typical errors include hostname
+         // not resolved, connection to server refused, etc.
+        mStatus = DONE;
+        mRes = FAILED;
+    }
+
+    // Should only be called after UrlRequest.isDone is true
+    public List<String> getResponse() {
+	if(mRes == SUCCESS && mStatus == DONE) {
+            BufferedReader reader = null;
+            List<String> lines = new ArrayList<>();
+            try {
+                reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytesReceived.toByteArray())));
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (!line.startsWith("##") && !line.equals("#EXTM3U")) {
+                        lines.add(line);
+                    }
+                }
+                return lines;
+            } catch (IOException e) {
+                    Log.e(TAG, e.getMessage());
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
+	return null;
+    }
+}
 
 /**
  * Java counterpart of android MediaResourceGetter.
@@ -151,7 +252,7 @@ class MediaResourceGetter {
         }
 
         if (isValidHlsUrl(url)) {
-            return doExtractHlsMetadata(url);
+            return doExtractHlsMetadata(context, url);
         }
 
         if (!configure(context, url, cookies, userAgent)) {
@@ -176,32 +277,21 @@ class MediaResourceGetter {
     }
 
     @VisibleForTesting
-    List<String> getHlsMetadataRequest(String url) {
+    List<String> getHlsMetadataRequest(final Context context, String url) {
         if (isValidHlsUrl(url)) {
-            BufferedReader reader = null;
-            List<String> lines = new ArrayList<>();
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (!line.startsWith("##") && !line.equals("#EXTM3U")) {
-                        lines.add(line);
-                    }
-                }
-                return lines;
-            } catch (IOException e) {
-                Log.e(TAG, "Cannot get hls metadata from: %s", url);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                    }
-                }
+                UrlRequestContextConfig myConfig = new UrlRequestContextConfig();
+                UrlRequestContext myRequestContext = UrlRequestContext.createContext(context, myConfig);
+                Executor executor = Executors.newSingleThreadExecutor();
+                HlsUrlRequestListener hlsUrlListener = new HlsUrlRequestListener();
+                UrlRequest urlRequest = myRequestContext.createRequest(
+                        url, hlsUrlListener, executor);
+                urlRequest.setHttpMethod("GET");
+                urlRequest.start();
+                while(!urlRequest.isDone());
+                return hlsUrlListener.getResponse();
+            } catch (Exception e) {
+                Log.e(TAG, "Exception in getHlsMetadataRequest: " + e.getMessage());
             }
         }
         return null;
@@ -233,13 +323,13 @@ class MediaResourceGetter {
         return new MediaMetadata(0, w, h, true);
     }
 
-    private MediaMetadata doExtractHlsMetadata(String url) {
+    private MediaMetadata doExtractHlsMetadata(final Context context, String url) {
         final String StreamInfo = "#EXT-X-STREAM-INF:";
         final String StreamInfoTargetDuration = "#EXT-X-TARGETDURATION:";
         final String ResolutionRegex = "^.*?RESOLUTION=(\\d*?)x(\\d+).*?$";
         int width = 0, height = 0;
 
-        List<String> lines = getHlsMetadataRequest(url);
+        List<String> lines = getHlsMetadataRequest(context, url);
         if (lines != null && lines.size() >= 2) {
             try {
                 final Pattern resolutionPattern = Pattern.compile(ResolutionRegex);
@@ -267,11 +357,11 @@ class MediaResourceGetter {
                         // Parse the first playlist url to get the duration of the stream
                         // Append url to base url if it does not start with http or https
                         String playlistUrl = lines.get(++i);
-                        lines = getHlsMetadataRequest(playlistUrl);
+                        lines = getHlsMetadataRequest(context, playlistUrl);
                         if (lines == null) {
                             // Relative url, prepend the original url
                             String rel = url.substring(0,  url.lastIndexOf("/") + 1) + playlistUrl;
-                            lines = getHlsMetadataRequest(rel);
+                            lines = getHlsMetadataRequest(context, rel);
                             if (lines == null) {
                                 Log.e(TAG, "Cannot parse url from hls playlist: %s", playlistUrl);
                                 return EMPTY_METADATA;
