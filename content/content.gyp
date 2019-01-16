@@ -444,7 +444,6 @@
             '../third_party/android_tools/android_tools.gyp:android_support_v13_javalib',
             '../third_party/WebKit/public/blink_headers.gyp:blink_headers_java',
             '../ui/mojo/geometry/mojo_bindings.gyp:mojo_geometry_bindings',
-            '../components/components.gyp:cronet_java',
             'common_aidl',
             'console_message_level_java',
             'content_common',
